@@ -1,0 +1,21 @@
+[project]
+name = "chap-bayesian-model"
+version = "0.1.0"
+description = "Pymc bayesian model implementation"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "joblib",
+    "cyclopts",
+    "geopandas>=1.1.2",
+    "jax>=0.9.0",
+    "jaxlib>=0.9.0",
+    "numpy>=2.4.2",
+    "numpyro>=0.20.0",
+    "pandas>=3.0.0",
+    "pymc>=5.26.1",
+    "scikit-learn>=1.8.0",
+    "scipy>=1.17.0",
+    "seaborn>=0.13.2",
+    "xarray>=2026.2.0",
+]
