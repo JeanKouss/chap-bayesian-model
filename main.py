@@ -4,14 +4,16 @@ CHAP model: malaria-chap-project
 A bayesian model implementation
 """
 
+import pathlib
+from datetime import datetime
 import joblib
 import pandas as pd
 from cyclopts import App
 import arviz as az
 from utils import BayesianModelUtils
 
-DRAWS = 1000
-TUNE = 1000
+DRAWS = 2000
+TUNE = 2000
 
 app = App()
 
@@ -69,6 +71,22 @@ def predict(model: str, historic_data: str, future_data: str, out_file: str):
     max_test_times = 30
     py_mc_model = BayesianModelUtils.build_malaria_model(training_df, meta['covariates'], meta['n_locations'], training_meta['training_n_times'] + max_test_times, adjency_matrix)
     trace = BayesianModelUtils.train_model(py_mc_model, draws=DRAWS, tune=TUNE)
+
+    # --- Divergence check -------------------------------------------------
+    n_divergences = int(trace.sample_stats.diverging.values.sum())
+    total_draws = trace.sample_stats.diverging.values.size
+    print(f"Divergences: {n_divergences} / {total_draws} "
+          f"({100 * n_divergences / total_draws:.2f}%)")
+    if n_divergences > 0:
+        print("WARNING: divergent transitions detected. "
+              "Consider increasing target_accept or reparameterising the model.")
+
+    # --- Save trace -------------------------------------------------------
+    trace_file = f"trace-{datetime.now().strftime('%Y%m%d-%H%M%S')}.nc"
+    az.to_netcdf(trace, trace_file)
+    print(f"Trace saved to {trace_file}")
+    # Reload later with: trace = az.from_netcdf(trace_file)
+    # ----------------------------------------------------------------------
 
     future_df = pd.read_csv(future_data)
     future_df_prepared = BayesianModelUtils.prepare_prediction_data(future_df, meta['scaler'], meta['location_to_idx'], training_meta['training_date_to_idx'], meta['covariates'])
